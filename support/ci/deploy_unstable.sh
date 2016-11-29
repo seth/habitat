@@ -50,6 +50,14 @@ echo "Built new unstable version of hab"
 
 echo "Publishing hab to unstable"
 PUBLISH=$(find ./results -name core-hab-bintray*.hart)
-RELEASE=$(find ./results -name core-hab-0*.hart)
+RELEASE_HAB=$(find ./results -name core-hab-0*.hart)
 ${TRAVIS_HAB} pkg install $PUBLISH
-${TRAVIS_HAB} pkg exec core/hab-bintray-publish publish-hab -r unstable $RELEASE
+${TRAVIS_HAB} pkg exec core/hab-bintray-publish publish-hab -r unstable $RELEASE_HAB
+
+echo "Building hab-sup"
+${TRAVIS_HAB} studio build habitat/components/sup
+RELEASE_SUP=$(find ./results -name core-hab-sup-0*.hart)
+echo "Built new unstable version of hab-sup"
+HAB_DEPOT_URL=https://app.acceptance.habitat.sh/v1/depot
+${TRAVIS_HAB} pkg upload $RELEASE_HAB -z ${HAB_GITHUB_AUTH_TOKEN}
+${TRAVIS_HAB} pkg upload $RELEASE_SUP -z ${HAB_GITHUB_AUTH_TOKEN}
