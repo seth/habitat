@@ -45,19 +45,23 @@ rm -rf ./release/*
 echo "Building bintray-publish"
 ${TRAVIS_HAB} studio build habitat/components/bintray-publish > /root/bintray-publish_build.log 2>&1
 echo "Building hab"
-${TRAVIS_HAB} studio build habitat/components/hab
+${TRAVIS_HAB} studio build habitat/components/hab > /root/hab_build.log 2>&1
 echo "Built new unstable version of hab"
 
 echo "Publishing hab to unstable"
 PUBLISH=$(find ./results -name core-hab-bintray*.hart)
 RELEASE_HAB=$(find ./results -name core-hab-0*.hart)
+RELEASE_SUP=$(find ./results -name core-hab-sup-0*.hart)
+
+# Publish to bintray
 ${TRAVIS_HAB} pkg install $PUBLISH
 ${TRAVIS_HAB} pkg exec core/hab-bintray-publish publish-hab -r unstable $RELEASE_HAB
 
 echo "Building hab-sup"
-${TRAVIS_HAB} studio build habitat/components/sup
-RELEASE_SUP=$(find ./results -name core-hab-sup-0*.hart)
+${TRAVIS_HAB} studio build habitat/components/sup > /root/hab_sup.log 2>&1
 echo "Built new unstable version of hab-sup"
+
+#Publish to Acceptance
 HAB_DEPOT_URL=https://app.acceptance.habitat.sh/v1/depot
 ${TRAVIS_HAB} pkg upload $RELEASE_HAB -z ${HAB_GITHUB_AUTH_TOKEN}
 ${TRAVIS_HAB} pkg upload $RELEASE_SUP -z ${HAB_GITHUB_AUTH_TOKEN}
