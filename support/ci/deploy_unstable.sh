@@ -16,7 +16,7 @@ mkdir -p ${BOOTSTRAP_DIR}
 # download a hab binary to build hab from source in a studio
 wget -O hab.tar.gz "${HAB_DOWNLOAD_URL}"
 # install it in a custom location
-tar xvzf ./hab.tar.gz --strip 1 -C ${BOOTSTRAP_DIR}
+tar xzf ./hab.tar.gz --strip 1 -C ${BOOTSTRAP_DIR}
 
 # so key stuff doesn't get funky
 unset SUDO_USER
@@ -44,9 +44,8 @@ rm -rf ./release/*
 # we have to build it here
 echo "Building bintray-publish"
 ${TRAVIS_HAB} studio build habitat/components/bintray-publish > /root/bintray-publish_build.log 2>&1
-echo "Building hab"
-${TRAVIS_HAB} studio build habitat/components/hab > /root/hab_build.log 2>&1
-echo "Built new unstable version of hab"
+
+${TRAVIS_HAB} studio run build habitat/components/sup && build habitat/components/hab
 
 echo "Publishing hab to unstable"
 PUBLISH=$(find ./results -name core-hab-bintray*.hart)
@@ -54,12 +53,8 @@ RELEASE_HAB=$(find ./results -name core-hab-0*.hart)
 RELEASE_SUP=$(find ./results -name core-hab-sup-0*.hart)
 
 # Publish to bintray
-${TRAVIS_HAB} pkg install $PUBLISH
+${TRAVIS_HAB} pkg install $PUBLISH > /root/bintray-publish.log 2>&1
 ${TRAVIS_HAB} pkg exec core/hab-bintray-publish publish-hab -r unstable $RELEASE_HAB
-
-echo "Building hab-sup"
-${TRAVIS_HAB} studio build habitat/components/sup > /root/hab_sup.log 2>&1
-echo "Built new unstable version of hab-sup"
 
 #Publish to Acceptance
 HAB_DEPOT_URL=https://app.acceptance.habitat.sh/v1/depot
