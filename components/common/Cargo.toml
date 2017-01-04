@@ -14,7 +14,7 @@ retry = "*"
 rustc-serialize = "*"
 term = "*"
 time = "*"
-toml = "*"
+toml = { version = "*", features = ["serde"] }
 
 [dependencies.habitat_core]
 path = "../core"

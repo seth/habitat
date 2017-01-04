@@ -24,7 +24,7 @@ router = "*"
 rustc-serialize = "*"
 serde = "*"
 serde_json = "*"
-toml = "*"
+toml = { version = "*", features = ["serde"] }
 unicase = "*"
 urlencoded = "*"
 

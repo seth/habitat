@@ -47,13 +47,12 @@ use rustc_serialize::Encodable;
 use url;
 use urlencoded::UrlEncodedQuery;
 
+pub use types::http::*;
 use super::Depot;
 use config::Config;
 use error::{Error, Result};
 
 define_event_log!();
-
-include!(concat!(env!("OUT_DIR"), "/serde_types.rs"));
 
 const PAGINATION_RANGE_DEFAULT: isize = 0;
 const PAGINATION_RANGE_MAX: isize = 50;

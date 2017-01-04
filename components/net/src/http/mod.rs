@@ -22,6 +22,7 @@ use protocol::net::ErrCode;
 
 pub fn net_err_to_http(err: ErrCode) -> Status {
     match err {
+<<<<<<< 4908cbe5686af955a6d0e415a4b459c0d54ba187
         ErrCode::BUG => Status::InternalServerError,
         ErrCode::TIMEOUT => Status::GatewayTimeout,
         ErrCode::REMOTE_REJECTED => Status::NotAcceptable,
@@ -40,5 +41,26 @@ pub fn net_err_to_http(err: ErrCode) -> Status {
         ErrCode::VCS_CLONE => Status::BadGateway,
         ErrCode::BUILD => Status::InternalServerError,
         ErrCode::POST_PROCESSOR => Status::InternalServerError,
+=======
+        ErrCode::BUG => StatusCode::InternalServerError,
+        ErrCode::TIMEOUT => StatusCode::GatewayTimeout,
+        ErrCode::REMOTE_REJECTED => StatusCode::NotAcceptable,
+        ErrCode::BAD_REMOTE_REPLY => StatusCode::BadGateway,
+        ErrCode::ENTITY_NOT_FOUND => StatusCode::NotFound,
+        ErrCode::NO_SHARD => StatusCode::ServiceUnavailable,
+        ErrCode::ACCESS_DENIED => StatusCode::Unauthorized,
+        ErrCode::PROTOCOL_MISMATCH => StatusCode::ServiceUnavailable,
+        ErrCode::SESSION_EXPIRED => StatusCode::Unauthorized,
+        ErrCode::ENTITY_CONFLICT => StatusCode::Conflict,
+        ErrCode::ZMQ => StatusCode::ServiceUnavailable,
+        ErrCode::DATA_STORE => StatusCode::ServiceUnavailable,
+        ErrCode::AUTH_SCOPE => StatusCode::Forbidden,
+        ErrCode::WORKSPACE_SETUP => StatusCode::InternalServerError,
+        ErrCode::SECRET_KEY_FETCH => StatusCode::BadGateway,
+        ErrCode::SECRET_KEY_IMPORT => StatusCode::InternalServerError,
+        ErrCode::VCS_CLONE => StatusCode::BadGateway,
+        ErrCode::BUILD => StatusCode::InternalServerError,
+        ErrCode::POST_PROCESSOR => StatusCode::InternalServerError,
+>>>>>>> Support GitHub push notifications to automatically schedule builds
     }
 }
