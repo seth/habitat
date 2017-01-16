@@ -635,6 +635,7 @@ function _Complete-DependencyResolution {
 function _Set-Path {
   $path_part = $null
   foreach($path in $pkg_bin_dirs) {
+  Write-BuildLine "adding bin: $path"
     if (!$path_part) {
       $path_part="$pkg_prefix/$path"
     }
