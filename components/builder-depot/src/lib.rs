@@ -61,7 +61,7 @@ use std::path::{Path, PathBuf};
 
 use crypto::sha2::Sha256;
 use crypto::digest::Digest;
-use hab_core::package::{Identifiable, PackageArchive};
+use hab_core::package::{Identifiable, PackageArchive, PackageTarget};
 use hab_net::server::NetIdent;
 use iron::typemap;
 
@@ -84,7 +84,8 @@ impl Depot {
     // Return a PackageArchive representing the given package. None is returned if the Depot
     // doesn't have an archive for the given package.
     fn archive<T: Identifiable>(&self, ident: &T) -> Option<PackageArchive> {
-        let file = self.archive_path(ident);
+        let default_target = PackageTarget::default();
+        let file = self.archive_path(ident, &default_target);
         match fs::metadata(&file) {
             Ok(_) => Some(PackageArchive::new(file)),
             Err(_) => None,
@@ -93,7 +94,7 @@ impl Depot {
 
     // Return a formatted string representing the filename of an archive for the given package
     // identifier pieces.
-    fn archive_path<T: Identifiable>(&self, ident: &T) -> PathBuf {
+    fn archive_path<T: Identifiable>(&self, ident: &T, target: &PackageTarget) -> PathBuf {
         let mut digest = Sha256::new();
         let mut output = [0; 64];
         digest.input_str(&ident.to_string());
@@ -101,11 +102,13 @@ impl Depot {
         self.packages_path()
             .join(format!("{:x}", output[0]))
             .join(format!("{:x}", output[1]))
-            .join(format!("{}-{}-{}-{}-x86_64-linux.hart",
+            .join(format!("{}-{}-{}-{}-{}-{}.hart",
                           ident.origin(),
                           ident.name(),
                           ident.version().unwrap(),
-                          ident.release().unwrap()))
+                          ident.release().unwrap(),
+                          target.architecture,
+                          target.platform))
     }
 
     fn key_path(&self, key: &str, rev: &str) -> PathBuf {

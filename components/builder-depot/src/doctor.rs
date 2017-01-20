@@ -18,7 +18,7 @@ use std::path::PathBuf;
 
 use dbcache::BasicSet;
 use hab_core;
-use hab_core::package::{FromArchive, PackageArchive};
+use hab_core::package::{FromArchive, PackageArchive, PackageTarget};
 use protocol::depotsrv;
 use time;
 use walkdir::WalkDir;
@@ -193,7 +193,8 @@ impl<'a> Doctor<'a> {
                     match depotsrv::Package::from_archive(&mut archive) {
                         Ok(object) => {
                             try!(self.depot.datastore.packages.write(&object));
-                            let path = self.depot.archive_path(&ident);
+                            let package_target = PackageTarget::default();
+                            let path = self.depot.archive_path(&ident, &package_target);
                             if let Some(e) = fs::create_dir_all(path.parent().unwrap()).err() {
                                 self.report
                                     .failure(OperationType::ArchiveInsert(entry.path()
