@@ -31,6 +31,18 @@
 #
 #
 
+param (
+    [switch]$h,
+    [switch]$n,
+    [switch]$q,
+    [switch]$v,
+    [string]$command,
+    [string]$commandVal,
+    [string]$k,
+    [string]$r,
+    [string]$s
+)
+
 # # Internals
 
 # ## Help/Usage functions
@@ -52,7 +64,6 @@ COMMON FLAGS:
     -n  Do not mount the source path into the Studio (default: mount the path)
     -q  Prints less output for better use in scripts
     -v  Prints more verbose output
-    -V  Prints version information
 
 COMMON OPTIONS:
     -k <HAB_ORIGIN_KEYS>  Installs secret origin keys (default:\$HAB_ORIGIN )
@@ -202,6 +213,7 @@ EXAMPLES:
 }
 
 function Write-HabInfo($Message) {
+  if($quiet) { return }
   Write-Host "   ${program}: " -ForegroundColor Cyan -NoNewline
   Write-Host $Message
 }
@@ -211,6 +223,10 @@ function Write-HabInfo($Message) {
 # These are the implementations for each subcommand in the program.
 
 function New-Studio {
+  if($printHelp) {
+    Write-NewHelp
+    return
+  }
   Write-HabInfo "Creating Studio at $HAB_STUDIO_ROOT"
 
   if(!(Test-Path $HAB_STUDIO_ROOT)) {
@@ -218,7 +234,7 @@ function New-Studio {
   }
 
   Set-Location $HAB_STUDIO_ROOT
-  if(!(Test-Path src)) {
+  if(!(Test-Path src) -and !($doNotMount)) {
     mkdir src | Out-Null
     New-Item -Name src -ItemType Junction -target $SRC_PATH.Path
   }
@@ -234,6 +250,10 @@ function New-Studio {
 }
 
 function Enter-Studio {
+  if($printHelp) {
+    Write-EnterHelp
+    return
+  }
   New-Studio
   Write-HabInfo "Entering Studio at $HAB_STUDIO_ROOT"
   $env:HAB_STUDIO_ENTER_ROOT = $HAB_STUDIO_ROOT
@@ -247,22 +267,34 @@ function Enter-Studio {
   }
 }
 
-function Invoke-StudioRun {
+function Invoke-StudioRun($cmd) {
+  if($printHelp -or ($cmd -eq $null)) {
+    Write-RunHelp
+    return
+  }
   New-Studio
-  Write-HabInfo "Running '$($args[1])' in Studio at $HAB_STUDIO_ROOT"
+  Write-HabInfo "Running '$cmd' in Studio at $HAB_STUDIO_ROOT"
   New-PSDrive -Name "Habitat" -PSProvider FileSystem -Root $HAB_STUDIO_ROOT | Out-Null
   Set-Location "Habitat:\src"
-  Invoke-Expression $args[1]
+  Invoke-Expression $cmd
 }
 
-function Invoke-StudioBuild {
+function Invoke-StudioBuild($location) {
+  if($printHelp -or ($location -eq $null)) {
+    Write-BuildHelp
+    return
+  }
   New-Studio
-  Write-HabInfo "Building '$($args[1])' in Studio at $HAB_STUDIO_ROOT"
+  Write-HabInfo "Building '$location' in Studio at $HAB_STUDIO_ROOT"
 
-  & "$PSScriptRoot\hab-plan-build.ps1" $args[1]
+  & "$PSScriptRoot\hab-plan-build.ps1" $location
 }
 
 function Remove-Studio {
+  if($printHelp) {
+    Write-RmHelp
+    return
+  }
   Write-HabInfo "Destroying Studio at $HAB_STUDIO_ROOT"
 
   if(Test-Path $HAB_STUDIO_ROOT) { Remove-Item $HAB_STUDIO_ROOT -Recurse -Force }
@@ -281,6 +313,7 @@ if($env:SRC_PATH) {
 else {
   $script:SRC_PATH = Get-Location
 }
+if($s) { $script:SRC_PATH = Resolve-Path $s }
 $script:dir_name = $SRC_PATH.Path.Replace("$($SRC_PATH.Drive):\","").Replace("\","--")
 
 if(!$env:HAB_STUDIOS_HOME) {
@@ -296,17 +329,35 @@ if(!$env:HAB_STUDIO_ROOT) {
 else {
   $script:HAB_STUDIO_ROOT = $env:HAB_STUDIO_ROOT
 }
+if($r) { $script:HAB_STUDIO_ROOT = $r }
 
-switch ($args[0]) {
-  "new" { New-Studio @args}
-  "run" { Invoke-StudioRun @args}
-  "rm" { Remove-Studio @args }
-  "enter" { Enter-Studio @args }
-  "build" { Invoke-StudioBuild @args }
-  "version" { Write-Host "$program $version" }
-  "help" { Write-Help }
-  default {
-    Write-Help
-    Write-Error "Invalid Argument $($args[0])"
+if($k) {
+  $env:HAB_ORIGIN_KEYS = $k
+}
+else {
+  $env:HAB_ORIGIN_KEYS = $env:HAB_ORIGIN
+}
+
+if($h) { $script:printHelp = $true }
+if($n) { $script:doNotMount = $true }
+if($q) { $script:quiet = $true }
+
+$currentVerbose = $VerbosePreference
+if($v) { $VerbosePreference = "Continue" }
+
+try {
+  switch ($command) {
+    "new" { New-Studio }
+    "run" { Invoke-StudioRun $commandVal }
+    "rm" { Remove-Studio }
+    "enter" { Enter-Studio }
+    "build" { Invoke-StudioBuild $commandVal }
+    "version" { Write-Host "$program $version" }
+    "help" { Write-Help }
+    default {
+      Write-Help
+      Write-Error "Invalid Argument $command"
+    }
   }
 }
+finally { $VerbosePreference = $currentVerbose }
