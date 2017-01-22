@@ -85,13 +85,13 @@ mod inner {
     const SUDO_CMD: &'static str = "sudo";
 
     pub fn start(ui: &mut UI, args: Vec<OsString>) -> Result<()> {
-        let command = match henv::var(STUDIO_CMD_ENVVAR) {
+        let command = match henv::var(super::STUDIO_CMD_ENVVAR) {
             Ok(command) => PathBuf::from(command),
             Err(_) => {
                 init();
-                let ident = try!(PackageIdent::from_str(STUDIO_PACKAGE_IDENT));
+                let ident = try!(PackageIdent::from_str(super::STUDIO_PACKAGE_IDENT));
                 try!(exec::command_from_pkg(ui,
-                                            STUDIO_CMD,
+                                            super::STUDIO_CMD,
                                             &ident,
                                             &default_cache_key_path(None),
                                             0))
